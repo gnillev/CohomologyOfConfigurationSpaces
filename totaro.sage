@@ -200,8 +200,8 @@ class CohomConfSpaceComplexCurve(object):
             return out_vector
         else:
             inElement = self.GetElementFromVector(x,i,j);
-            i_out = i+2*L
-            j_out = j+1-2*L
+            i_out = i+2
+            j_out = j-1
             hpart = inElement[0].hpart
             gpart = inElement[0].gpart
             
@@ -222,16 +222,74 @@ class CohomConfSpaceComplexCurve(object):
             grElement = dgElement([dgBasisTuple(self.E2[0][j-1][grIndex])])
             grVector = self.GetVectorFromElement(grElement)
 
-            #print g0Element;
+            print inElement, g0Element, grElement
             
             d1Element = self.GetElementFromVector(self.d_on_vectorbasis(g0Vector,0,1),2,0) * grElement
             d1Vector = self.GetVectorFromElement(d1Element)
-
+            
             d2Element = g0Element * self.GetElementFromVector(self.d_on_vectorbasis(grVector,0,j-1),2,j-2) 
             d2Vector = self.GetVectorFromElement(d2Element)
 
             sign = (-1)**(hElement.multiIndex[0])
-            #print sign
+            
+
+            outElement =  (sign * hElement) * self.GetElementFromVector(d1Vector - d2Vector, 2, j-1) ;
+
+            outVector = self.GetVectorFromElement(outElement)
+            
+            return outVector
+
+    def d_on_vector(self, x, i, j):
+        if (i,j) <= (0,0):
+            return 0;
+        elif j == 0:
+            return 0;
+        elif (i,j) == (0,1):
+            """ Send G_{a,b} to class of diagonal in (0+2*L, 1+1-2*L) = (2,0) """
+            cohom_indx = self.E2Vector[i][j].basis().index(x)
+            cohom_elm = self.E2[i][j][cohom_indx]
+
+            diagonal_sum = self.cohomObject.Diagonal(cohom_elm[1][0][0],cohom_elm[1][0][1])
+
+            out_vector = 0
+            for elm in diagonal_sum:
+                out_vector += self.cohomObject.GetVector(elm)
+            return out_vector
+        else:
+            inElement = self.GetElementFromVector(x,i,j);
+            i_out = i+2
+            j_out = j-1
+            hpart = inElement[0].hpart
+            gpart = inElement[0].gpart
+            
+            
+            g0Index = self.algebraObject[1].index([gpart[0][0]]);
+            
+            if j == 1:
+                grIndex = 0;
+            else:
+                grIndex = self.algebraObject[j-1].index(gpart[0][1:]);
+            
+            
+            hIndex = self.cohomObject[i].index(hpart.element)
+            hElement = dgElement([dgBasisTuple(self.E2[i][0][hIndex])])
+            
+            g0Element = dgElement([dgBasisTuple(self.E2[0][1][g0Index])])
+            g0Vector = self.GetVectorFromElement(g0Element)
+            grElement = dgElement([dgBasisTuple(self.E2[0][j-1][grIndex])])
+            grVector = self.GetVectorFromElement(grElement)
+
+            print inElement, g0Element, grElement
+            
+            d1Element = self.GetElementFromVector(self.d_on_vectorbasis(g0Vector,0,1),2,0) * grElement
+            d1Vector = self.GetVectorFromElement(d1Element)
+            
+            d2Element = g0Element * self.GetElementFromVector(self.d_on_vectorbasis(grVector,0,j-1),2,j-2) 
+            d2Vector = self.GetVectorFromElement(d2Element)
+
+            sign = (-1)**(hElement.multiIndex[0])
+            
+
             outElement =  (sign * hElement) * self.GetElementFromVector(d1Vector - d2Vector, 2, j-1) ;
 
             outVector = self.GetVectorFromElement(outElement)
@@ -262,34 +320,39 @@ testObject = CohomConfSpaceComplexCurve(N,G);
 #print testObject.GetTensor(2,1);
 vect = testObject.d_on_vectorbasis(vector((1,0)),0,2)
 elem = testObject.GetElementFromVector(vect,2,1)
-print elem
+#print elem
 
-sum_vect = 0
-for indx, coord in enumerate(testObject.E2Vector[2][1].coordinates(vect)):
-    if coord != 0:
-        print indx
-        vect2 = testObject.d_on_vectorbasis(coord*testObject.E2Vector[2][1].basis()[indx],2,1)
-        elem2 = testObject.GetElementFromVector(vect2,4,0)
-        sum_vect += vect2
-        print elem2
-print sum_vect
+vect2 = testObject.d_on_vectorbasis(vect,2,1)
+elem2 = testObject.GetElementFromVector(vect2,4,0)
+print vect2
+
+# sum_vect = 0
+# for indx, coord in enumerate(testObject.E2Vector[2][1].coordinates(vect)):
+#     if coord != 0:
+#         #print indx
+#         vect2 = testObject.d_on_vectorbasis(coord*testObject.E2Vector[2][1].basis()[indx],2,1)
+#         elem2 = testObject.GetElementFromVector(vect2,4,0)
+#         sum_vect += vect2
+#         print elem2
+# print testObject.GetElementFromVector(sum_vect,4,0)
 #print testObject.E2[0][1][testObject.E2Vector[0][1].basis().index(vector((1,0,0)))]
 
 
-#(i,j) = (2,1)
-#print testObject.d(i,j).kernel();
-#print testObject.d(i-2,j+1).image();
-#print testObject.d(i,j).kernel();
-#print testObject.d(i,j).kernel().quotient(testObject.d(i-2,j+1).image());
+# #(i,j) = (2,1)
+# #print testObject.d(i,j).kernel();
+# #print testObject.d(i-2,j+1).image();
+# #print testObject.d(i,j).kernel();
+# #print testObject.d(i,j).kernel().quotient(testObject.d(i-2,j+1).image());
 
-#testd2 = testObject.d_on_vectorbasis(testObject.d_on_vectorbasis(vector((1,0)),0,2),2,1)
-#print testd2
+# testd2 = testObject.d_on_vectorbasis(testObject.d_on_vectorbasis(vector((1,0)),0,2),2,1)
+# # testd2 = testObject.d_on_vectorbasis(vector((1,0)),0,2)
+# print testObject.GetElementFromVector(testd2,4,0)
 
-for i in xrange(2*N+1):
-    for j in xrange(round((N/2)**2)+1):
-        print i,j;
+# for i in xrange(2*N+1):
+#     for j in xrange(round((N/2)**2)+1):
+#         print i,j;
         
-        print testObject.d(i,j).kernel();
-        print testObject.d(i-2,j+1).image();
-        print testObject.d(i,j).kernel().quotient(testObject.d(i-2,j+1).image());
-        #print testObject.d(i,j).kernel().dimension() - testObject.d(i-2,j+1).image().dimension();
+#         print testObject.d(i,j).kernel();
+#         print testObject.d(i-2,j+1).image();
+#         print testObject.d(i,j).kernel().quotient(testObject.d(i-2,j+1).image());
+#         #print testObject.d(i,j).kernel().dimension() - testObject.d(i-2,j+1).image().dimension();

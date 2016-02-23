@@ -233,7 +233,7 @@ class ComplexCurveCohomPower(CohomologyObject):
         diagonal_sum += [CohomologyBasisElement([(0,0),(2,0)])]
 
         for k in xrange(0,self.genus):
-            diagonal_sum += [CohomologyBasisElement([(1,k),(1,k+self.genus)],-1), CohomologyBasisElement([(1,k+self.genus),(1,k)],-1)]
+            diagonal_sum += [CohomologyBasisElement([(1,k),(1,k+self.genus)],-1), CohomologyBasisElement([(1,k+self.genus),(1,k)],1)]
 
         diagonal_sum += [CohomologyBasisElement([(2,0),(0,0)])]
 
