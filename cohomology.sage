@@ -257,8 +257,10 @@ class ComplexCurveCohomPower(CohomologyObject):
 
 
 #Tests:
-# testComplexCurveCohom = ComplexCurveCohomPower(2,2)
+testComplexCurveCohom = ComplexCurveCohomPower(1,3)
 # print testComplexCurveCohom.TensorRepresentation()
 #print map(lambda c : c.degree, testComplexCurveCohom.Diagonal(0,2))
-
+elem2 = CohomologyBasisElement([(1,0),(0,0),(0,0)],1)
+elem1 = CohomologyBasisElement([(0,0),(1,0),(0,0)],1)
+#print elem1 * elem2
 
