@@ -111,20 +111,20 @@ class ConfAlgebraElement(object):
         permutationSorted = Permutation(map(lambda x : element.index(x)+1, elementSorted));
         return (permutationSorted.sign(), elementSorted);
 
-    def expandRelations(self, sign, element):
+    def expandRelations(self, coeff, element):
         reorder = self.reorderList(element);
-        (sign, element) = (sign * reorder[0], reorder[1])
+        (sign, ordered_element) = (coeff * reorder[0], reorder[1])
 
-        if element == 1:
-            return [ConfAlgebraBasisElement(element,sign)]
-        if element == 0:
+        if ordered_element == 1:
+            return [ConfAlgebraBasisElement(ordered_element,sign)]
+        if ordered_element == 0:
             return []
 
-        for indx, key in enumerate(element):
-            triangleMatch = [ x for x in element[indx+1:] if x[0]==key[1] ]
+        for indx, key in enumerate(ordered_element):
+            triangleMatch = [ x for x in ordered_element[indx+1:] if x[0]==key[1] ]
             if len(triangleMatch) > 0:
                 key2 = triangleMatch[0]
-                restList = list(element)
+                restList = list(ordered_element)
                 restSign = (-1)**indx
                 restList.remove(key)
                 restSign = (-1)**restList.index(key2) * restSign
@@ -133,7 +133,7 @@ class ConfAlgebraElement(object):
                 out_elements += self.expandRelations(sign * restSign, [(key[0],key[1]),(key[0], key2[1])] + restList)
                 out_elements += self.expandRelations(sign * restSign, [(key[0],key2[1]),(key2[0], key2[1])] + restList)
                 return out_elements
-        return [ConfAlgebraBasisElement(element,sign)]
+        return [ConfAlgebraBasisElement(ordered_element,sign)]
 
 #testElm = ConfAlgebraBasisElement([(0,1),(0,2),(1,3)]);
 #testElm2 = ConfAlgebraBasisElement([(1,2),(1,4),(3,4)]);
