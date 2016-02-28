@@ -1,46 +1,49 @@
 import itertools
 
-class AlgebraBasisElement(object):
-    """docstring for AlgebraBasisElement"""
+class ConfAlgebraBasisElement(object):
+    """docstring for ConfAlgebraBasisElement"""
 
-    def __init__(self, element, coord = 1):
+    def __init__(self, element, coeff = 1):
         self.element = element
 
         if element == 1:
             self.degree = 0
         else:
             self.degree = len(self.element)
-        self.coord = coord
+        self.coeff = coeff
         
 
     def __str__(self):
-        return str(self.coord) + "*" + str(self.element)
+        return str(self.coeff) + "*" + str(self.element)
 
     def __repr__(self):
         return str(self)
 
     def __mul__(a,b):
         if a.element == 1:
-            res = AlgebraBasisElement(b.element, a.coord * b.coord)
+            res = ConfAlgebraBasisElement(b.element, a.coeff * b.coeff)
             return res
         elif b.element == 1:
-            return AlgebraBasisElement(a.element, a.coord * b.coord)
+            return ConfAlgebraBasisElement(a.element, a.coeff * b.coeff)
         else:
-            return AlgebraBasisElement(a.element + b.element, a.coord * b.coord)
+            return ConfAlgebraBasisElement(a.element + b.element, a.coeff * b.coeff)
 
     def __rmul__(self, other):
-        return AlgebraBasisElement(self.element, self.coord * other)
+        return ConfAlgebraBasisElement(self.element, self.coeff * other)
 
     def __getitem__(self, item):
-        return self.element[item];
+        if self.element = 1:
+            return 1
+        else:
+            return self.element[item];
 
 
-class AlgebraElement(object):
-    """docstring for AlgebraElement"""
+class ConfAlgebraElement(object):
+    """docstring for ConfAlgebraElement"""
     def __init__(self, elements):
 
         if elements != []:
-            
+
             if all(x.degree == elements[0].degree for x in elements):
                 self.degree = elements[0].degree
             else:
@@ -49,7 +52,7 @@ class AlgebraElement(object):
             expand_elements = []
 
             for elm in elements:
-                expand_elements += self.expandRelations(elm.coord, elm.element)
+                expand_elements += self.expandRelations(elm.coeff, elm.element)
 
             self.elements = []
             tally = defaultdict(list)
@@ -61,13 +64,13 @@ class AlgebraElement(object):
                     tally[tuple(x.element)].append(i)
 
             for elm, positions in tally.items():
-                coord = 0
+                coeff = 0
                 for pos in positions:
-                    coord += expand_elements[pos].coord
+                    coeff += expand_elements[pos].coeff
                 if elm == 1:
-                    self.elements.append(AlgebraBasisElement(elm,coord))
+                    self.elements.append(ConfAlgebraBasisElement(elm,coeff))
                 else:
-                    self.elements.append(AlgebraBasisElement(list(elm),coord))
+                    self.elements.append(ConfAlgebraBasisElement(list(elm),coeff))
         else:
             self.degree = 0
             self.elements = []
@@ -87,10 +90,10 @@ class AlgebraElement(object):
             for belm in b.elements:
                 result_elements.append(aelm * belm)
 
-        return AlgebraElement(result_elements)
+        return ConfAlgebraElement(result_elements)
 
     def __rmul__(self, other):
-        return AlgebraElement(map(lambda elm : elm * other, self.elements))
+        return ConfAlgebraElement(map(lambda elm : elm * other, self.elements))
 
     def __getitem__(self, item):
         return self.elements[item]
@@ -113,7 +116,7 @@ class AlgebraElement(object):
         (sign, element) = (sign * reorder[0], reorder[1])
 
         if element == 1:
-            return [AlgebraBasisElement(element,sign)]
+            return [ConfAlgebraBasisElement(element,sign)]
         if element == 0:
             return []
 
@@ -130,55 +133,78 @@ class AlgebraElement(object):
                 out_elements += self.expandRelations(sign * restSign, [(key[0],key[1]),(key[0], key2[1])] + restList)
                 out_elements += self.expandRelations(sign * restSign, [(key[0],key2[1]),(key2[0], key2[1])] + restList)
                 return out_elements
-        return [AlgebraBasisElement(element,sign)]
+        return [ConfAlgebraBasisElement(element,sign)]
 
-#testElm = AlgebraBasisElement([(0,1),(0,2),(1,3)]);
-#testElm2 = AlgebraBasisElement([(1,2),(1,4),(3,4)]);
+#testElm = ConfAlgebraBasisElement([(0,1),(0,2),(1,3)]);
+#testElm2 = ConfAlgebraBasisElement([(1,2),(1,4),(3,4)]);
 #print testElm2;
-#testElms = AlgebraElement([testElm]);
-#testElms2 = AlgebraElement([testElm2]);
-#print (testElms2*testElms)[0].coord;
-#testElms3 = AlgebraElement([AlgebraBasisElement([(0, 2),(0, 3),(1, 2), (1, 3), (1, 4), (3, 4)])]);
+#testElms = ConfAlgebraElement([testElm]);
+#testElms2 = ConfAlgebraElement([testElm2]);
+#print (testElms2*testElms)[0].coeff;
+#testElms3 = ConfAlgebraElement([ConfAlgebraBasisElement([(0, 2),(0, 3),(1, 2), (1, 3), (1, 4), (3, 4)])]);
 #print testElms3
 
 
 class ConfAlgebraObject(object):
     """docstring for ConfAlgebraObject"""
-    def __init__(self, dimension):
-        self.dimension = dimension
-        self.rels = [self.relConf1, self.relConf2]
+    def __init__(self, npoints, base_ring = QQ):
+        self.npoints = npoints
+        self.base_ring = base_ring
+
+        self.rels = [self._relConf1, self._relConf2]
         self.G = []
         self.G.append([1])
         self.G.append([])
-        for i in xrange(0, self.dimension-1):
-            for j in xrange(i+1, self.dimension):
-                #self.G[1] += ['g{'+str(i)+','+str(j)+'}']
+        for i in xrange(0, self.npoints-1):
+            for j in xrange(i+1, self.npoints):
                 self.G[1] += [[(i,j)]]
 
-        for i in xrange(2,round((self.dimension/2)**2)+1):
+        k = 2
+        while len(self.G[k-1])>0:
             self.G.append([])
             for x in self.G[1]:
-                for y in self.G[i-1]:
-                        if all(f(x,y) for f in self.rels):
-                            self.G[i].append(x+y)
+                for y in self.G[k-1]:
+                    if all(f(x,y) for f in self.rels):
+                        self.G[k].append(x+y)
+            k += 1
+        del self.G[-1]
 
-    def relConf1(self,x,y):
+        self.GVector = []
+        for k in xrange(0,len(self.G)):
+            self.GVector.append(FreeModule(self.base_ring,len(self.G[k])))
+
+        # Public attributes
+        self.top_degree = len(self.G)-1
+
+    def _relConf1(self,x,y):
         return x[0] < y[0]
 
-    def relConf2(self,x,y):
+    def _relConf2(self,x,y):
         return all(z[0] != x[0][1] for z in y)
 
+    def GetBasis(self,degree):
+        # if degree >= len(self.G):
+        #     return []
+        # else:
+        return self.G[degree]
+
+    def GetVectorSpace(self,degree):
+        # if degree >= len(self.G):
+        #     return FreeModule(self.base_ring,0)
+        # else:
+        return self.GVector[degree]
+
     def __str__(self):
-        strReturn =  "ConfAlgebraObject with " + str(self.dimension) + " points: "
+        strReturn =  "ConfAlgebraObject with " + str(self.npoints) + " points: "
         for i,d in enumerate(self.G):
             strReturn += "G(" + str(i) + "): " + str(len(d)) + ", "
         return strReturn
 
     def __getitem__(self, degree):
-        return self.G[degree]
+        return self.GetBasis(degree)
 
 
 # Tests:
-#testConfAlgebraObject = ConfAlgebraObject(3);
-#print testConfAlgebraObject.G;
+# testConfAlgebraObject = ConfAlgebraObject(3);
+# print testConfAlgebraObject.G;
 
