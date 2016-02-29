@@ -4,7 +4,7 @@ load("algebra.sage")
 
 
 G = 2; # Genus of complex curve
-N = 3; # Number of points in configuration space.
+N = 2; # Number of points in configuration space.
 L = 1; # Complex dimension; No impact at the moment.
 
 ### Set genus for all instances of CohomologyBasisElement in the following
@@ -131,6 +131,13 @@ class dgElement(object):
 
 class CohomConfSpaceComplexCurve(object):
     """docstring for ConfSpaceCohomComplexCurve"""
+
+    def __str__(self):
+        return "ConfSpaceCohomComplexCurve object with top degrees: " + str(self.top_degree);
+
+    def __repr__(self):
+        return str(self)
+
     def __init__(self, npoints, genus):
         self.npoints = npoints
         self.genus = genus
@@ -315,8 +322,8 @@ class CohomConfSpaceComplexCurve(object):
         return self._ECohom[i][j]
 
     def PrintBettiNumbers(self):
-        out_str = ""
-        print self.GetBettiNumbers()
+        out_str = "Betti numbers \nN=" + str(self.npoints) + ", G=" + str(self.genus) + ": \n" 
+        #print self.GetBettiNumbers()
         for j in xrange(self.top_degree[1],-1,-1):
             for i in xrange(0,len(self.GetBettiNumbers())):
                 out_str += str(i) + "," + str(j) + ": " + str(self.GetBettiNumbers()[i][j]) + "\t"
@@ -324,7 +331,7 @@ class CohomConfSpaceComplexCurve(object):
         return out_str
 
     def PrintE2Dimensions(self):
-        out_str = ""
+        out_str = "E2 Dimensions \nN=" + str(self.npoints) + ", G=" + str(self.genus) + ": \n" 
         #print self.GetBettiNumbers()
         for j in xrange(self.top_degree[1],-1,-1):
             for i in xrange(0,self.top_degree[0]+1):
@@ -333,9 +340,10 @@ class CohomConfSpaceComplexCurve(object):
         return out_str
 
 testObject = CohomConfSpaceComplexCurve(N,G)
-print testObject.top_degree
+print testObject
 print testObject.cohomObject
 print testObject.algebraObject
+print testObject.PrintE2Dimensions()
 print testObject.PrintBettiNumbers()
 
 # print "In: " + str(testObject.GetElementFromVector(vector((1,0)),0,2))
