@@ -4,7 +4,7 @@ load("algebra.sage")
 
 
 G = 2; # Genus of complex curve
-N = 2; # Number of points in configuration space.
+N = 3; # Number of points in configuration space.
 L = 1; # Complex dimension; No impact at the moment.
 
 ### Set genus for all instances of CohomologyBasisElement in the following
@@ -28,7 +28,7 @@ class dgBasisTuple(object):
 
         i = self.hpart.degree
         j = self.gpart.degree
-        self.multiIndex = (i,j)
+        self.multi_degree = (i,j)
 
     def __str__(self):
         return str(self.coeff) + "*" + str(self.element)
@@ -40,7 +40,7 @@ class dgBasisTuple(object):
         # We multiply some ([(d_1,k_1),...,(d_i,k_i)],[(a_1, b_1), ..., (a_j, b_j)]) with ([(d'_1,k'_1),...,(d'_i',k'_i')],[(a'_1, b'_1), ..., (a'_j', b'_j')]).
         # First commute algebra generators from a with cohomology generators from b.
         # Calculate sign
-        sign = (-1)**(a.multiIndex[1] * b.multiIndex[0])
+        sign = (-1)**(a.multi_degree[1] * b.multi_degree[0])
 
         # Multiply cohomology generators
         hpart = a.hpart * b.hpart
@@ -56,11 +56,12 @@ class dgBasisTuple(object):
         helm = hpart.element
         elements = []
         if coeff != 0:
-            for gfactor in gpart.elements:
-                if gfactor.coeff != 0:
-                    out_coeff = coeff * gfactor.coeff
-                    if gfactor.element != 1:
-                        for g in gfactor:
+            for gsummand in gpart.elements:
+                if gsummand.coeff != 0:
+                    out_coeff = coeff * gsummand.coeff
+                    if gsummand.element != 1:
+                        #print gsummand
+                        for g in reversed(gsummand.element):
                             (i,j) = (g[0], g[1])
                             if helm[j] != (0,0):
                                 hsub = CohomologyBasisElement([helm[i]]) * CohomologyBasisElement([helm[j]])
@@ -74,7 +75,7 @@ class dgBasisTuple(object):
                                 helm[j] = (0,0)
                                 out_coeff *= sub_sign * hsub.coeff
                     if out_coeff != 0:
-                        elements.append(dgBasisTuple((helm, gfactor.element), out_coeff))
+                        elements.append(dgBasisTuple((helm, gsummand.element), out_coeff))
 
         
         return dgElement(elements)
@@ -89,15 +90,15 @@ class dgElement(object):
         self.elements = elements;
         
         if elements == []:
-            self.multiIndex = (0,0)
+            self.multi_degree = (0,0)
         else:
-            if all(x.multiIndex == elements[0].multiIndex for x in elements):
-                self.multiIndex = elements[0].multiIndex
+            if all(x.multi_degree == elements[0].multi_degree for x in elements):
+                self.multi_degree = elements[0].multi_degree
             else:
                 raise ValueError("Basiselements must be of the same bi-degree.")
 
     def __add__(a,b):
-        if a.multiIndex == b.multiIndex:
+        if a.multi_degree == b.multi_degree:
             return dgElement(a.elements + b.elements)
         else:
             raise ValueError("To add two dgElements, they must reside in the same vector space.")
@@ -167,7 +168,7 @@ class CohomConfSpaceComplexCurve(object):
             return self.E2[i][j]
 
     def GetVectorFromElement(self, elems):
-        (i,j) = elems.multiIndex
+        (i,j) = elems.multi_degree
         out_vector = 0
         for elem in elems:
             indx = self.E2[i][j].index(elem.element)
@@ -176,9 +177,11 @@ class CohomConfSpaceComplexCurve(object):
 
     def GetElementFromVector(self, vect, i, j):
         out_elements = []
+
         for indx, coeff in enumerate(self.E2Vector[i][j].coordinates(vect)):
             if coeff != 0:
                 out_elements.append(dgBasisTuple(self.E2[i][j][indx],coeff))
+
         return dgElement(out_elements)
 
     def relGH1(self, x, y):
@@ -191,6 +194,7 @@ class CohomConfSpaceComplexCurve(object):
 
     # Must be able to evaluate on combinations of basis-elements
     def d_on_vector(self, x, i, j):
+
         if (i,j) <= (0,0):
             return 0;
         elif j == 0:
@@ -208,7 +212,7 @@ class CohomConfSpaceComplexCurve(object):
                 out_vector = 0
                 for elm in diagonal_sum:
                     out_vector += self.cohomObject.GetVector(elm)
-                vectorCombination.append(out_vector)
+                vectorCombination.append(basis_elm.coeff * out_vector)
 
             return reduce(lambda x,y : x+y, vectorCombination)
         else:
@@ -217,8 +221,10 @@ class CohomConfSpaceComplexCurve(object):
             j_out = j-1
 
             vectorCombination = []
+
             #Loop through the linear combination
             for basis_elm in inElement:
+
 
                 #Fetch the cohomObject and algebraObject from the basistuple
                 hpart = basis_elm.hpart
@@ -251,7 +257,7 @@ class CohomConfSpaceComplexCurve(object):
                 hElement = dgElement([dgBasisTuple(self.E2[i][0][hIndex],basis_elm.coeff)])
             
                 #print inElement, hElement, g0Element, grElement
-                
+
                 #Calculate d(G_0) * (G_1 * ... * G_j-1)
                 d1Element = self.GetElementFromVector(self.d_on_vector(g0Vector,0,1),2,0) * grElement
                 d1Vector = self.GetVectorFromElement(d1Element)
@@ -262,8 +268,8 @@ class CohomConfSpaceComplexCurve(object):
 
                 # Sign comes from d(H * G) = d(H) * G + (-1)**(deg(H)) H * d(G) = (-1)**(deg(H)) H * d(G),
                 # since d(h) = 0 for all h in H^*(X^n)
-                sign = (-1)**(hElement.multiIndex[0])
-            
+                sign = (-1)**(hElement.multi_degree[0])
+                
                 # Calculate (-1)**(deg(H)) H * d(G), where 
                 # d(G) = d(G_0) * (G_1 * ... * G_j-1) + (-1)^(deg(G_0)) G_0 * d(G_1 * ... * G_j-1)
                 #      = d1Element - d2Element
@@ -276,6 +282,7 @@ class CohomConfSpaceComplexCurve(object):
             return reduce(lambda x,y : x+y, vectorCombination)
 
     def d(self,i,j):
+
         if i+2 > self.top_degree[0] or j-1 < 0:
             return linear_transformation(self.E2Vector[i][j], VectorSpace(QQ,0), lambda elm : self.d_on_vector(elm,i,j) );
         if i < 0 or j > self.top_degree[1]:
@@ -284,15 +291,15 @@ class CohomConfSpaceComplexCurve(object):
             return linear_transformation(self.E2Vector[i][j], self.E2Vector[i+2][j-1], lambda elm : self.d_on_vector(elm,i,j));
 
     def _FormCohomology(self):
-        self._EInf = []
+        self._ECohom = []
         self._BettiNumbers = []
         for i in xrange(0,self.top_degree[0]+1):
-            self._EInf.append([])
+            self._ECohom.append([])
             self._BettiNumbers.append([])
             for j in xrange(0,self.top_degree[1]+1):
                 #print i,j;
-                self._EInf[i].append(testObject.d(i,j).kernel().quotient(testObject.d(i-2,j+1).image()))
-                self._BettiNumbers[i].append(self._EInf[i][j].dimension())
+                self._ECohom[i].append(testObject.d(i,j).kernel().quotient(testObject.d(i-2,j+1).image()))
+                self._BettiNumbers[i].append(self._ECohom[i][j].dimension())
 
     def GetBettiNumbers(self):
         if not hasattr(self, "_BettiNumbers"):
@@ -302,10 +309,10 @@ class CohomConfSpaceComplexCurve(object):
     def GetBettiNumber(self,i,j):
         return self.GetBettiNumbers()[i][j]
 
-    def GetEInf(self,i,j):
-        if not hasattr(self, "_BettiNumbers"):
+    def GetECohom(self,i,j):
+        if not hasattr(self, "_ECohom"):
             self._FormCohomology()
-        return self._EInf[i][j]
+        return self._ECohom[i][j]
 
     def PrintBettiNumbers(self):
         out_str = ""
@@ -313,6 +320,15 @@ class CohomConfSpaceComplexCurve(object):
         for j in xrange(self.top_degree[1],-1,-1):
             for i in xrange(0,len(self.GetBettiNumbers())):
                 out_str += str(i) + "," + str(j) + ": " + str(self.GetBettiNumbers()[i][j]) + "\t"
+            out_str += "\n"
+        return out_str
+
+    def PrintE2Dimensions(self):
+        out_str = ""
+        #print self.GetBettiNumbers()
+        for j in xrange(self.top_degree[1],-1,-1):
+            for i in xrange(0,self.top_degree[0]+1):
+                out_str += str(i) + "," + str(j) + ": " + str(len(self.E2[i][j])) + "\t"
             out_str += "\n"
         return out_str
 

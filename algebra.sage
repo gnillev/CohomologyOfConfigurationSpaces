@@ -32,7 +32,7 @@ class ConfAlgebraBasisElement(object):
         return ConfAlgebraBasisElement(self.element, self.coeff * other)
 
     def __getitem__(self, item):
-        if self.element = 1:
+        if self.element == 1:
             return 1
         else:
             return self.element[item];
@@ -121,7 +121,7 @@ class ConfAlgebraElement(object):
             return []
 
         for indx, key in enumerate(ordered_element):
-            triangleMatch = [ x for x in ordered_element[indx+1:] if x[0]==key[1] ]
+            triangleMatch = [ x for x in ordered_element[indx+1:] if x[1]==key[1] ]
             if len(triangleMatch) > 0:
                 key2 = triangleMatch[0]
                 restList = list(ordered_element)
@@ -130,8 +130,8 @@ class ConfAlgebraElement(object):
                 restSign = (-1)**restList.index(key2) * restSign
                 restList.remove(key2)
                 out_elements = []
-                out_elements += self.expandRelations(sign * restSign, [(key[0],key[1]),(key[0], key2[1])] + restList)
-                out_elements += self.expandRelations(sign * restSign, [(key[0],key2[1]),(key2[0], key2[1])] + restList)
+                out_elements += self.expandRelations(sign * restSign, [(key[0],key2[0]),(key2[0], key2[1])] + restList)
+                out_elements += self.expandRelations(-1 * sign * restSign, [(key[0],key2[0]),(key[0], key[1])] + restList)
                 return out_elements
         return [ConfAlgebraBasisElement(ordered_element,sign)]
 
@@ -180,7 +180,7 @@ class ConfAlgebraObject(object):
         return x[0] < y[0]
 
     def _relConf2(self,x,y):
-        return all(z[0] != x[0][1] for z in y)
+        return all(z[1] != x[0][1] for z in y)
 
     def GetBasis(self,degree):
         # if degree >= len(self.G):
