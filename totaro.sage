@@ -3,8 +3,8 @@ load("cohomology.sage")
 load("algebra.sage")
 
 
-G = 2; # Genus of complex curve
-N = 2; # Number of points in configuration space.
+G = 1; # Genus of complex curve
+N = 3; # Number of points in configuration space.
 L = 1; # Complex dimension; No impact at the moment.
 
 ### Set genus for all instances of CohomologyBasisElement in the following
